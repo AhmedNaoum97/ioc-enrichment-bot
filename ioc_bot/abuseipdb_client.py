@@ -2,7 +2,7 @@ import os
 import requests
 from dotenv import load_dotenv
 
-load_dotenv()  # reads .env into environment variables
+load_dotenv()  # Reads .env into environment variables
 
 ABUSEIPDB_URL = "https://api.abuseipdb.com/api/v2/check"
 
@@ -17,6 +17,7 @@ def lookup_abuseipdb(indicator: str) -> dict | None:
         ABUSEIPDB_URL,
         headers={"Key": api_key, "Accept": "application/json"},
         params={"ipAddress": indicator, "maxAgeInDays": 90},
+        timeout=10,
     )
 
     if response.status_code == 404:
