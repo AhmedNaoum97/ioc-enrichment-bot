@@ -9,7 +9,7 @@ def detect_indicator_type(value: str) -> str:
 
     # Full URLs are accepted: strip the scheme/path and classify the host.
     if "://" in value:
-        value = urlparse(value).netloc
+        value = urlparse(value).hostname or ""
 
     try:
         ipaddress.ip_address(value)

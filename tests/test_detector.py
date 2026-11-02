@@ -31,3 +31,10 @@ def test_garbage_is_unknown():
 
 def test_bare_scheme_is_unknown():
     assert detect_indicator_type("http://") == "unknown"
+
+def test_url_with_ip_and_port():
+    assert detect_indicator_type("http://1.2.3.4:8080/admin") == "ip"
+
+def test_url_with_domain_and_port():
+    assert detect_indicator_type("https://example.com:8080/path") == "domain"
+    
