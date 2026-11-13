@@ -2,14 +2,20 @@ import ipaddress
 from urllib.parse import urlparse
 
 
-def detect_indicator_type(value: str) -> str:
-    """Classify an indicator string as an IP address, hash, domain, or unknown."""
-
+def normalize_indicator(value: str) -> str:
+    """Strip, lowercase, and reduce full URLs to their hostname."""
     value = value.strip().lower()
 
-    # Full URLs are accepted: strip the scheme/path and classify the host.
+    # Full URLs are accepted: strip the scheme/port/path and keep the host.
     if "://" in value:
         value = urlparse(value).hostname or ""
+
+    return value
+
+
+def detect_indicator_type(value: str) -> str:
+    """Classify an indicator string as an IP address, hash, domain, or unknown."""
+    value = normalize_indicator(value)
 
     try:
         ipaddress.ip_address(value)
