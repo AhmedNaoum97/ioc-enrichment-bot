@@ -1,6 +1,8 @@
+import ipaddress
+
+from . import abuseipdb_client
 from . import detector
 from . import vt_client
-from . import abuseipdb_client
 
 
 SEVERITY = {
@@ -36,3 +38,39 @@ def abuse_verdict(abuse_data: dict | None) -> str | None:
     if confidence >= 25:
         return "suspicious"
     return "clean"
+
+
+def enrich(raw: str) -> dict:
+    """Normalize, classify, look up, and return a combined verdict for one IOC."""
+    indicator = detector.normalize_indicator(raw)
+    ioc_type = detector.detect_indicator_type(indicator)
+
+    result = {
+        "indicator": indicator,
+        "type": ioc_type,
+        "virustotal": None,
+        "abuseipdb": None,
+        "verdict": "unknown",
+    }
+
+    if ioc_type == "unknown":
+        return result
+
+    if ioc_type == "ip" and not ipaddress.ip_address(indicator).is_global:
+        result["verdict"] = "internal"
+        return result
+
+    result["virustotal"] = vt_client.lookup_virustotal(indicator, ioc_type)
+
+    if ioc_type == "ip":
+        result["abuseipdb"] = abuseipdb_client.lookup_abuseipdb(indicator)
+
+    verdicts = [
+        v
+        for v in (vt_verdict(result["virustotal"]), abuse_verdict(result["abuseipdb"]))
+        if v is not None
+    ]
+    if verdicts:
+        result["verdict"] = max(verdicts, key=SEVERITY.get)
+
+    return result
